@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Clash of Nodes</title>
+  <style>
+    :root {
+      --bg-gradient: radial-gradient(circle at center, #111424 0%, #060814 100%);
+      --glass-bg: rgba(15, 20, 42, 0.45);
+      --glass-border: rgba(255, 255, 255, 0.08);
+      --glass-glow: 0 8px 32px 0 rgba(0, 0, 0, 0.6);
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --border-radius: 16px;
+      --font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+
+    body {
+      font-family: var(--font-family);
+      background: var(--bg-gradient);
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-sizing: border-box;
+      padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    }
+
+    /* Glassmorphism Panels */
+    .glass-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--glass-border);
+      box-shadow: var(--glass-glow), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      border-radius: var(--border-radius);
+      padding: 24px;
+      width: 90%;
+      max-width: 480px;
+      text-align: center;
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* Start Menu styling */
+    #start-menu {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      animation: fadeIn 0.5s ease-out;
+    }
+
+    .game-title {
+      font-size: 2.22rem;
+      font-weight: 800;
+      letter-spacing: -0.05em;
+      background: linear-gradient(135deg, #a78bfa 0%, #f472b6 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+    }
+
+    .game-subtitle {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+      line-height: 1.4;
+    }
+
+    .setting-group {
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .setting-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .options-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .players-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .option-btn {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--glass-border);
+      color: var(--text-main);
+      padding: 10px 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .option-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .option-btn.active {
+      background: linear-gradient(135deg, rgba(167, 139, 250, 0.3) 0%, rgba(244, 114, 182, 0.3) 100%);
+      border-color: #a78bfa;
+      box-shadow: 0 0 12px rgba(167, 139, 250, 0.25);
+    }
+
+    /* Start Button */
+    .btn-primary {
+      background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+      color: #fff;
+      border: none;
+      padding: 14px 28px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(139, 92, 246, 0.4);
+      transition: all 0.3s ease;
+      margin-top: 12px;
+    }
+
+    .btn-primary:active {
+      transform: scale(0.97);
+      box-shadow: 0 2px 10px rgba(139, 92, 246, 0.3);
+    }
+
+    /* Game Screen styling */
+    #game-container {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+      box-sizing: border-box;
+      gap: 12px;
+      padding: 16px;
+      animation: fadeIn 0.5s ease-out;
+    }
+
+    .game-header {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--glass-bg);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--border-radius);
+      padding: 12px 16px;
+      box-shadow: var(--glass-glow);
+    }
+
+    .player-indicator {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .player-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      box-shadow: 0 0 10px currentColor;
+      transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .player-name-display {
+      font-size: 1.05rem;
+      font-weight: bold;
+      transition: color 0.3s ease;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-header {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--glass-border);
+      color: var(--text-main);
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+
+    .btn-header:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .btn-header:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    /* Board Area */
+    .board-wrapper {
+      position: relative;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--border-radius);
+      box-shadow: var(--glass-glow);
+      overflow: hidden;
+      width: 100%;
+      flex-grow: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #game-canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+    }
+
+    /* Side info / Active Players bar */
+    .players-status-bar {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      width: 100%;
+      padding: 6px 0;
+      scrollbar-width: none;
+    }
+
+    .players-status-bar::-webkit-scrollbar {
+      display: none;
+    }
+
+    .player-tag {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--glass-border);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.77rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      transition: all 0.3s ease;
+    }
+
+    .player-tag.active {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: currentColor;
+      color: #fff;
+    }
+
+    .player-tag.eliminated {
+      opacity: 0.25;
+      text-decoration: line-through;
+    }
+
+    /* Screen shake class (applied to board wrapper) */
+    .shake {
+      animation: shakeDur 0.15s ease-in-out infinite alternate;
+    }
+
+    @keyframes shakeDur {
+      0% { transform: translate(1px, 1px) rotate(0deg); }
+      100% { transform: translate(-1px, -1px) rotate(0.5deg); }
+    }
+
+    /* Winner overlay */
+    #winner-screen {
+      display: none;
+      flex-direction: column;
+      gap: 20px;
+      animation: zoomIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .winner-banner {
+      font-size: 2.8rem;
+      font-weight: 900;
+      background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: pulseGlow 2s infinite ease-in-out;
+      line-height: 1.1;
+    }
+
+    .winner-details {
+      font-size: 1.15rem;
+      color: var(--text-main);
+      margin-bottom: 10px;
+    }
+
+    /* General Animations */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes zoomIn {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes pulseGlow {
+      0%, 100% { filter: drop-shadow(0 0 5px rgba(245, 158, 11, 0.3)); }
+      50% { filter: drop-shadow(0 0 15px rgba(245, 158, 11, 0.6)); }
+    }
+
+    /* Utility rules */
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Start Menu Screen -->
+  <div id="start-menu" class="glass-card">
+    <div style="text-align: right; max-width: 420px; margin: 0 auto;">
+      <h1 class="game-title" style="text-align: center; margin-bottom: 0;">CLASH OF NODES</h1>
+      <div style="font-size: 0.85rem; font-weight: 700; color: #f472b6; text-transform: uppercase; letter-spacing: 0.15em; margin-top: 4px; margin-bottom: 12px; text-align: right;">By JoJo</div>
+    </div>
+
+    <!-- Grid Size Selection -->
+    <div class="setting-group">
+      <span class="setting-label">Matrix Dimensions</span>
+      <div class="options-grid" id="grid-selection">
+        <button class="option-btn" data-grid="small">6 × 9<br><span style="font-size:11px; font-weight:normal; opacity:0.7">Small</span></button>
+        <button class="option-btn active" data-grid="medium">8 × 12<br><span style="font-size:11px; font-weight:normal; opacity:0.7">Medium</span></button>
+        <button class="option-btn" data-grid="large">10 × 15<br><span style="font-size:11px; font-weight:normal; opacity:0.7">Large</span></button>
+      </div>
+    </div>
+
+    <!-- Player Count Selection -->
+    <div class="setting-group">
+      <span class="setting-label">Node Operators (Players)</span>
+      <div class="players-grid" id="player-count-selection">
+        <button class="option-btn active" data-players="2">2</button>
+        <button class="option-btn" data-players="3">3</button>
+        <button class="option-btn" data-players="4">4</button>
+        <button class="option-btn" data-players="5">5</button>
+        <button class="option-btn" data-players="6">6</button>
+        <button class="option-btn" data-players="7">7</button>
+        <button class="option-btn" data-players="8">8</button>
+      </div>
+    </div>
+
+    <button class="btn-primary" id="btn-start-game">INITIALIZE MATRIX</button>
+  </div>
+
+  <!-- Game Play Screen -->
+  <div id="game-container">
+    <div class="game-header">
+      <div class="player-indicator">
+        <div class="player-dot" id="current-player-dot"></div>
+        <span class="player-name-display" id="current-player-name">Initializing...</span>
+      </div>
+      <div class="header-actions">
+        <button class="btn-header" id="btn-undo" disabled>Undo</button>
+        <button class="btn-header" id="btn-restart">Restart</button>
+        <button class="btn-header" id="btn-quit">Quit</button>
+      </div>
+    </div>
+
+    <div class="board-wrapper" id="board-container">
+      <canvas id="game-canvas"></canvas>
+    </div>
+
+    <!-- Active Players Status tracker -->
+    <div class="players-status-bar" id="status-bar"></div>
+  </div>
+
+  <!-- Winner Screen -->
+  <div id="winner-screen" class="glass-card">
+    <h2 class="winner-title" style="font-size: 1.1rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--text-muted)">Matrix Overlord Established</h2>
+    <div class="winner-banner" id="winner-announce">PLAYER 1</div>
+    <div class="winner-details">Has claimed complete control of the quantum fields!</div>
+    <button class="btn-primary" id="btn-play-again" style="margin-top: 5px;">RE-INITIALIZE MATRIX</button>
+  </div>
+
+  <script>
+    // Configurable futuristic palettes
+    const PLAYER_PRESETS = [
+      { name: "Cyan", color: "#38bdf8", glow: "rgba(56, 189, 248, 0.45)" },
+      { name: "Magenta", color: "#f43f5e", glow: "rgba(244, 63, 94, 0.45)" },
+      { name: "Emerald", color: "#10b981", glow: "rgba(16, 185, 129, 0.45)" },
+      { name: "Yellow", color: "#eab308", glow: "rgba(234, 179, 8, 0.45)" },
+      { name: "Violet", color: "#8b5cf6", glow: "rgba(139, 92, 246, 0.45)" },
+      { name: "Orange", color: "#f97316", glow: "rgba(249, 115, 22, 0.45)" },
+      { name: "Ice Blue", color: "#22d3ee", glow: "rgba(34, 211, 238, 0.45)" },
+      { name: "Rose", color: "#ec4899", glow: "rgba(236, 72, 153, 0.45)" }
+    ];
+
+    // Grids data
+    const GRIDS = {
+      small: { cols: 6, rows: 9 },
+      medium: { cols: 8, rows: 12 },
+      large: { cols: 10, rows: 15 }
+    };
+
+    // State Variables
+    let selectedGridKey = "medium";
+    let selectedPlayerCount = 2;
+    let gridConfig = GRIDS[selectedGridKey];
+    let players = [];
+    let currentPlayerIndex = 0;
+    let grid = []; // 2D Array of spaces
+    let particles = [];
+    let state = "MENU"; // MENU, PLAYING, ANIMATING, WINNER
+    let loopId = null;
+    let isTransitioningTurn = false;
+    let isUndoing = false;
+    let totalTurnsMade = 0;
+    let turnHistory = [];
+
+    // Elements
+    const startMenu = document.getElementById('start-menu');
+    const gameContainer = document.getElementById('game-container');
+    const winnerScreen = document.getElementById('winner-screen');
+    const gridSelection = document.getElementById('grid-selection');
+    const playerCountSelection = document.getElementById('player-count-selection');
+    const btnStartGame = document.getElementById('btn-start-game');
+    const btnUndo = document.getElementById('btn-undo');
+    const btnRestart = document.getElementById('btn-restart');
+    const btnQuit = document.getElementById('btn-quit');
+    const btnPlayAgain = document.getElementById('btn-play-again');
+    const boardContainer = document.getElementById('board-container');
+    const canvas = document.getElementById('game-canvas');
+    const ctx = canvas.getContext('2d');
+    const currentPlayerDot = document.getElementById('current-player-dot');
+    const currentPlayerName = document.getElementById('current-player-name');
+    const statusBar = document.getElementById('status-bar');
+    const winnerAnnounce = document.getElementById('winner-announce');
+
+    // Setup Start Menu Options
+    gridSelection.addEventListener('click', (e) => {
+      const btn = e.target.closest('button');
+      if (!btn) return;
+      gridSelection.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      selectedGridKey = btn.dataset.grid;
+      gridConfig = GRIDS[selectedGridKey];
+    });
+
+    playerCountSelection.addEventListener('click', (e) => {
+      const btn = e.target.closest('button');
+      if (!btn) return;
+      playerCountSelection.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      selectedPlayerCount = parseInt(btn.dataset.players);
+    });
+
+    btnStartGame.addEventListener('click', startNewGame);
+    btnUndo.addEventListener('click', undoLastMove);
+    btnRestart.addEventListener('click', startNewGame);
+    btnQuit.addEventListener('click', showMainMenu);
+    btnPlayAgain.addEventListener('click', showMainMenu);
+
+    // Dynamic grid size settings helper
+    function getCriticalMass(col, row, totalCols, totalRows) {
+      let count = 0;
+      if (col > 0) count++;
+      if (col < totalCols - 1) count++;
+      if (row > 0) count++;
+      if (row < totalRows - 1) count++;
+      return count;
+    }
+
+     // Shake screen effect
+    let isShaking = false;
+    let shakeTimer = 0;
+
+    function triggerVibration(durationMs = 40) {
+      try {
+        if (window.AndroidInterface && typeof window.AndroidInterface.vibrate === "function") {
+          window.AndroidInterface.vibrate(durationMs);
+        } else if (navigator.vibrate) {
+          navigator.vibrate(durationMs);
+        }
+      } catch (e) {
+        console.warn("Vibration failed", e);
+      }
+    }
+
+    function triggerScreenShake(durationMs = 200) {
+      if (isShaking) return;
+      isShaking = true;
+      boardContainer.classList.add('shake');
+      triggerVibration(durationMs === 180 ? 60 : 45);
+      setTimeout(() => {
+        boardContainer.classList.remove('shake');
+        isShaking = false;
+      }, durationMs);
+    }
+
+    // Setup dimensions
+    let cachedCellW = 0;
+    let cachedCellH = 0;
+
+    function resizeCanvas() {
+      if (state === "MENU" || state === "WINNER") return;
+      const rect = boardContainer.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      
+      // Calculate responsive layout fits
+      const gridW = gridConfig.cols;
+      const gridH = gridConfig.rows;
+      
+      let containerW = rect.width;
+      let containerH = rect.height;
+      
+      // Strict fallback if bounding rect is not calculated yet
+      if (containerW <= 0 || containerH <= 0) {
+        containerW = window.innerWidth - 32;
+        containerH = window.innerHeight - 180;
+      }
+      
+      const aspect = gridW / gridH;
+      let finalW, finalH;
+      
+      if (containerW / containerH > aspect) {
+        finalH = containerH;
+        finalW = containerH * aspect;
+      } else {
+        finalW = containerW;
+        finalH = containerW / aspect;
+      }
+      
+      canvas.width = finalW * dpr;
+      canvas.height = finalH * dpr;
+      canvas.style.width = `${finalW}px`;
+      canvas.style.height = `${finalH}px`;
+      
+      ctx.scale(dpr, dpr);
+
+      // Pre-calculate cell dimensions to avoid layout thrashing inside gameLoop
+      cachedCellW = finalW / gridConfig.cols;
+      cachedCellH = finalH / gridConfig.rows;
+    }
+
+    // Modern observer to trigger resize changes fluidly and immediately
+    const boardResizeObserver = new ResizeObserver(() => {
+      if (state === "PLAYING" || state === "ANIMATING") {
+        resizeCanvas();
+      }
+    });
+    boardResizeObserver.observe(boardContainer);
+
+    window.addEventListener('resize', resizeCanvas);
+
+    // Initialize/Start Game
+    function startNewGame() {
+      state = "PLAYING";
+      totalTurnsMade = 0;
+      turnHistory = [];
+      gridConfig = GRIDS[selectedGridKey];
+      
+      // Generate players settings
+      players = [];
+      for (let i = 0; i < selectedPlayerCount; i++) {
+        players.push({
+          id: i,
+          name: `PLAYER-${i + 1}`,
+          color: PLAYER_PRESETS[i].color,
+          glow: PLAYER_PRESETS[i].glow,
+          eliminated: false,
+          hasPlayed: false
+        });
+      }
+
+      currentPlayerIndex = 0;
+
+      // Construct matrix/grid
+      grid = [];
+      for (let r = 0; r < gridConfig.rows; r++) {
+        const rowData = [];
+        for (let c = 0; c < gridConfig.cols; c++) {
+          const maxMass = getCriticalMass(c, r, gridConfig.cols, gridConfig.rows);
+          rowData.push({
+            r: r,
+            c: c,
+            orbs: 0,
+            owner: -1,
+            max: maxMass,
+            pulsePhase: Math.random() * Math.PI * 2,
+            targetOrbs: 0,
+            renderedOrbs: 0,
+            shakeOffsetX: 0,
+            shakeOffsetY: 0,
+            shakeTimer: 0
+          });
+        }
+        grid.push(rowData);
+      }
+
+      particles = [];
+
+      startMenu.style.display = 'none';
+      winnerScreen.style.display = 'none';
+      gameContainer.style.display = 'flex';
+
+      setTimeout(() => {
+        resizeCanvas();
+        updateUI();
+      }, 50);
+
+      if (!loopId) {
+        loopId = requestAnimationFrame(gameLoop);
+      }
+    }
+
+    function showMainMenu() {
+      state = "MENU";
+      turnHistory = [];
+      if (loopId) {
+        cancelAnimationFrame(loopId);
+        loopId = null;
+      }
+      gameContainer.style.display = 'none';
+      winnerScreen.style.display = 'none';
+      startMenu.style.display = 'flex';
+    }
+
+    function updateUI() {
+      const activePlayer = players[currentPlayerIndex];
+      currentPlayerDot.style.color = activePlayer.color;
+      currentPlayerDot.style.backgroundColor = activePlayer.color;
+      currentPlayerName.innerText = activePlayer.name;
+      currentPlayerName.style.color = activePlayer.color;
+
+      // Render Active Constructor status trackers
+      statusBar.innerHTML = '';
+      players.forEach((p, idx) => {
+        const tag = document.createElement('div');
+        tag.className = `player-tag ${p.eliminated ? 'eliminated' : ''} ${idx === currentPlayerIndex ? 'active' : ''}`;
+        if (idx === currentPlayerIndex) {
+          tag.style.borderColor = p.color;
+          tag.style.color = p.color;
+          tag.style.boxShadow = `0 0 10px ${p.glow}`;
+        }
+        tag.innerHTML = `
+          <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background-color:${p.color}; box-shadow: 0 0 4px ${p.color}; margin-right:4px;"></span>
+          ${p.name}
+        `;
+        statusBar.appendChild(tag);
+      });
+      updateUndoButtonState();
+    }
+
+    function saveStateToHistory() {
+      const gridSnapshot = grid.map(row => row.map(cell => ({ ...cell })));
+      const playersSnapshot = players.map(p => ({ ...p }));
+      turnHistory.push({
+        grid: gridSnapshot,
+        players: playersSnapshot,
+        currentPlayerIndex: currentPlayerIndex,
+        totalTurnsMade: totalTurnsMade
+      });
+      if (turnHistory.length > 30) {
+        turnHistory.shift();
+      }
+      updateUndoButtonState();
+    }
+
+    function undoLastMove() {
+      if (isUndoing || turnHistory.length === 0 || state === "ANIMATING" || isTransitioningTurn) return;
+      
+      isUndoing = true;
+      const lastState = turnHistory.pop();
+      grid = lastState.grid;
+      players = lastState.players;
+      currentPlayerIndex = lastState.currentPlayerIndex;
+      totalTurnsMade = lastState.totalTurnsMade;
+      
+      // Clear active animation particles
+      particles = [];
+      
+      state = "PLAYING";
+      
+      updateUI();
+      updateUndoButtonState();
+      
+      setTimeout(() => {
+        isUndoing = false;
+        updateUndoButtonState();
+      }, 300); // 300ms cooldown to prevent multiple rapid undo clicks
+    }
+
+    function updateUndoButtonState() {
+      if (btnUndo) {
+        btnUndo.disabled = (turnHistory.length === 0 || state !== "PLAYING" || isTransitioningTurn || isUndoing);
+      }
+    }
+
+    // Grid coordinate to pixel values
+    function getCellMetrics(c, r) {
+      return {
+        x: c * cachedCellW,
+        y: r * cachedCellH,
+        w: cachedCellW,
+        h: cachedCellH,
+        cx: c * cachedCellW + cachedCellW / 2,
+        cy: r * cachedCellH + cachedCellH / 2
+      };
+    }
+
+    // Click on canvas
+    canvas.addEventListener('click', (e) => {
+      if (state !== "PLAYING" || isTransitioningTurn) return;
+
+      const rect = canvas.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      const clickY = e.clientY - rect.top;
+
+      // Direct, optimized coordinate mapping using cached cell sizes
+      if (cachedCellW <= 0 || cachedCellH <= 0) return;
+
+      const col = Math.floor(clickX / cachedCellW);
+      const row = Math.floor(clickY / cachedCellH);
+
+      // Verify range
+      if (col >= 0 && col < gridConfig.cols && row >= 0 && row < gridConfig.rows) {
+        handleCellTap(col, row);
+      }
+    });
+
+    function handleCellTap(col, row) {
+      const cell = grid[row][col];
+      const activePlayer = players[currentPlayerIndex];
+
+      // Block tap if cell is held by rival player
+      if (cell.orbs > 0 && cell.owner !== activePlayer.id) {
+        // Subtle failure ripple particle of opponent's color
+        spawnFailWave(col, row, activePlayer.color);
+        triggerVibration(80);
+        return;
+      }
+
+      // Save state before move
+      saveStateToHistory();
+
+      // Tap confirmation
+      triggerVibration(18);
+
+      // Claim cell & Increments
+      cell.owner = activePlayer.id;
+      cell.orbs += 1;
+      activePlayer.hasPlayed = true;
+      totalTurnsMade++;
+
+      // Trigger placements growth animation
+      cell.pulsePhase = 0; // reset spin
+      triggerCellRipple(col, row, activePlayer.color);
+
+      // Start cascade logic
+      state = "ANIMATING";
+      resolveChainReaction();
+    }
+
+    // Visual notification on invalid placement
+    function spawnFailWave(c, r, color) {
+      const m = getCellMetrics(c, r);
+      for (let i = 0; i < 12; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const vel = 1 + Math.random() * 2;
+        particles.push({
+          type: "ripple",
+          x: m.cx,
+          y: m.cy,
+          color: color,
+          size: 2 + Math.random() * 2,
+          alpha: 1,
+          vx: Math.cos(angle) * vel,
+          vy: Math.sin(angle) * vel,
+          shrink: 0.02
+        });
+      }
+    }
+
+    function triggerCellRipple(c, r, color) {
+      const m = getCellMetrics(c, r);
+      particles.push({
+        type: "expand-wave",
+        x: m.cx,
+        y: m.cy,
+        maxRadius: Math.max(m.w, m.h) * 0.7,
+        radius: 4,
+        color: color,
+        alpha: 1
+      });
+    }
+
+    // Reaction solver with sequential waves or smooth timer based execution for elegant cascade visual representation
+    function resolveChainReaction() {
+      // Find all cells that currently exceed or equal their critical mass limit
+      const unstableCells = [];
+      for (let r = 0; r < gridConfig.rows; r++) {
+        for (let c = 0; c < gridConfig.cols; c++) {
+          const cell = grid[r][c];
+          if (cell.orbs >= cell.max) {
+            unstableCells.push(cell);
+          }
+        }
+      }
+
+      if (unstableCells.length === 0) {
+        // Stable state reached! Check standard end turn
+        concludeTurn();
+        return;
+      }
+
+      // Multi-explosion! Shake screen & dispatch visual particles in sequential waves
+      triggerScreenShake(180);
+
+      // Visualise transitions
+      unstableCells.forEach(cell => {
+        const m = getCellMetrics(cell.c, cell.r);
+        const ownerColor = players[currentPlayerIndex].color;
+
+        // Reset or subtract of critical components
+        cell.orbs -= cell.max;
+        if (cell.orbs <= 0) {
+          cell.orbs = 0;
+          cell.owner = -1;
+        }
+
+        // Spawn beautiful energy particles & explosions
+        // Let's create burst rays
+        for (let k = 0; k < 25; k++) {
+          const angle = Math.random() * Math.PI * 2;
+          const speed = 2 + Math.random() * 4;
+          particles.push({
+            type: "sparkle",
+            x: m.cx,
+            y: m.cy,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            size: 3 + Math.random() * 4,
+            alpha: 1,
+            decay: 0.025 + Math.random() * 0.02,
+            color: ownerColor
+          });
+        }
+
+        // Send orbs travelling to nearest neighbors
+        const neighbors = [];
+        if (cell.c > 0) neighbors.push({ c: cell.c - 1, r: cell.r, dx: -1, dy: 0 });
+        if (cell.c < gridConfig.cols - 1) neighbors.push({ c: cell.c + 1, r: cell.r, dx: 1, dy: 0 });
+        if (cell.r > 0) neighbors.push({ c: cell.c, r: cell.r - 1, dx: 0, dy: -1 });
+        if (cell.r < gridConfig.rows - 1) neighbors.push({ c: cell.c, r: cell.r + 1, dx: 0, dy: 1 });
+
+        neighbors.forEach(n => {
+          const targetCoords = getCellMetrics(n.c, n.r);
+          particles.push({
+            type: "moving-orb",
+            sx: m.cx,
+            sy: m.cy,
+            tx: targetCoords.cx,
+            ty: targetCoords.cy,
+            x: m.cx,
+            y: m.cy,
+            progress: 0,
+            speed: 0.11, // Travel rate per frame (customisable)
+            color: ownerColor,
+            targetCol: n.c,
+            targetRow: n.r,
+            ownerId: players[currentPlayerIndex].id
+          });
+        });
+      });
+    }
+
+    // Frame loops handles moving-orb terminations
+    function claimMovingOrbArrival(p) {
+      const cell = grid[p.targetRow][p.targetCol];
+      cell.owner = p.ownerId;
+      cell.orbs += 1;
+      
+      // Flash destination cell
+      triggerCellRipple(p.targetCol, p.targetRow, p.color);
+    }
+
+    function checkEliminationsAndWin() {
+      // Eliminate players with zero cells who have already played
+      let activeConstructors = 0;
+      let winningCandidate = null;
+
+      players.forEach(p => {
+        if (p.eliminated) return;
+
+        // If played at least once, count cell totals
+        if (p.hasPlayed) {
+          let cellsOwned = 0;
+          for (let r = 0; r < gridConfig.rows; r++) {
+            for (let c = 0; c < gridConfig.cols; c++) {
+              if (grid[r][c].owner === p.id && grid[r][c].orbs > 0) {
+                cellsOwned++;
+              }
+            }
+          }
+
+          if (cellsOwned === 0) {
+            p.eliminated = true; // Lost!
+          }
+        }
+      });
+
+      // Count survivors
+      let totalSurvivors = 0;
+      let lastSurvivor = null;
+
+      players.forEach(p => {
+        if (!p.eliminated) {
+          totalSurvivors++;
+          lastSurvivor = p;
+        }
+      });
+
+      // Standard win checker:
+      // If we are at index and only 1 player retains a hold, and at least 2 players have actually deployed once
+      const playersWhoHavePlayedCount = players.filter(p => p.hasPlayed).length;
+
+      if (playersWhoHavePlayedCount >= 2 && totalSurvivors === 1) {
+        announceWinner(lastSurvivor);
+        return true;
+      }
+      return false;
+    }
+
+    function concludeTurn() {
+      // Check elms
+      const won = checkEliminationsAndWin();
+      if (won) return;
+
+      // Pass down index to next remaining active player
+      let tries = 0;
+      do {
+        currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
+        tries++;
+      } while (players[currentPlayerIndex].eliminated && tries <= players.length);
+
+      state = "PLAYING";
+      isTransitioningTurn = true;
+      setTimeout(() => {
+        isTransitioningTurn = false;
+        updateUndoButtonState();
+      }, 100);
+
+      updateUI();
+    }
+
+    function announceWinner(winner) {
+      state = "WINNER";
+      gameContainer.style.display = 'none';
+      winnerScreen.style.display = 'flex';
+      winnerAnnounce.innerText = winner.name;
+      winnerAnnounce.style.color = winner.color;
+      winnerAnnounce.style.textShadow = `0 0 20px ${winner.glow}`;
+    }
+
+    // 60FPS Game loop rendering engine
+    function gameLoop(time) {
+      if (state === "MENU" || state === "WINNER") {
+        loopId = requestAnimationFrame(gameLoop);
+        return;
+      }
+
+      ctx.clearRect(0, 0, canvas.width / (window.devicePixelRatio || 1), canvas.height / (window.devicePixelRatio || 1));
+
+      // Draw Grid Matrix Backings & Borders
+      for (let r = 0; r < gridConfig.rows; r++) {
+        for (let c = 0; c < gridConfig.cols; c++) {
+          const metrics = getCellMetrics(c, r);
+          const cell = grid[r][c];
+          
+          // Outer background panel cells
+          ctx.fillStyle = "rgba(6, 8, 20, 0.4)";
+          ctx.fillRect(metrics.x, metrics.y, metrics.w, metrics.h);
+
+          // Grid divider borders with glassmorphism transparency glow
+          ctx.strokeStyle = "rgba(255, 255, 255, 0.045)";
+          ctx.lineWidth = 1;
+          ctx.strokeRect(metrics.x, metrics.y, metrics.w, metrics.h);
+
+          // Render border overlays if owned to create cell-specific glowing boundaries
+          if (cell.owner !== -1 && cell.orbs > 0) {
+            const owner = players[cell.owner];
+            if (owner) {
+              ctx.strokeStyle = `${owner.color}1c`; // extremely faint outline
+              ctx.strokeRect(metrics.x + 1, metrics.y + 1, metrics.w - 2, metrics.h - 2);
+            }
+          }
+
+          // Render cell critical hints (subtle progress dots inside center bounds)
+          ctx.fillStyle = "rgba(255, 255, 255, 0.08)";
+          ctx.beginPath();
+          ctx.arc(metrics.cx, metrics.cy, 3, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Render Glowing Orbs inside grid cell
+          if (cell.orbs > 0) {
+            const owner = players[cell.owner];
+            if (owner) {
+              renderCellOrbs(ctx, cell, metrics, owner);
+            }
+          }
+        }
+      }
+
+      // Draw active particles & explosions updates
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        
+        if (p.type === "sparkle") {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.alpha -= p.decay;
+          if (p.alpha <= 0) {
+            particles.splice(i, 1);
+            continue;
+          }
+          ctx.save();
+          ctx.globalAlpha = p.alpha;
+          ctx.fillStyle = p.color;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+
+        else if (p.type === "ripple") {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.size = Math.max(0.1, p.size - p.shrink);
+          p.alpha -= 0.05;
+          if (p.alpha <= 0 || p.size <= 0.2) {
+            particles.splice(i, 1);
+            continue;
+          }
+          ctx.save();
+          ctx.globalAlpha = p.alpha;
+          ctx.fillStyle = p.color;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+
+        else if (p.type === "expand-wave") {
+          p.radius += 2.5;
+          p.alpha = 1 - (p.radius / p.maxRadius);
+          if (p.alpha <= 0 || p.radius >= p.maxRadius) {
+            particles.splice(i, 1);
+            continue;
+          }
+          ctx.save();
+          ctx.globalAlpha = p.alpha * 0.8;
+          ctx.strokeStyle = p.color;
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.restore();
+        }
+
+        else if (p.type === "moving-orb") {
+          p.progress += p.speed;
+          if (p.progress >= 1.0) {
+            claimMovingOrbArrival(p);
+            particles.splice(i, 1);
+            
+            // Re-trigger chain checks once all moving assets satisfy arrivals
+            if (particles.filter(pt => pt.type === "moving-orb").length === 0) {
+              resolveChainReaction();
+            }
+            continue;
+          }
+
+          // Quad ease interpolation path transitions
+          p.x = p.sx + (p.tx - p.sx) * p.progress;
+          p.y = p.sy + (p.ty - p.sy) * p.progress;
+
+          // Draw travelling heavy core orb
+          ctx.save();
+          ctx.shadowBlur = 12;
+          ctx.shadowColor = p.color;
+          ctx.fillStyle = p.color;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, 8, 0, Math.PI * 2);
+          ctx.fill();
+          
+          // Pulsing tailing energy paths of moving components
+          ctx.globalAlpha = 0.45;
+          ctx.beginPath();
+          ctx.arc(p.x - (p.tx - p.sx) * 0.08, p.y - (p.ty - p.sy) * 0.08, 6, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+      }
+
+      loopId = requestAnimationFrame(gameLoop);
+    }
+
+    // Advanced cell orbital orb configurations rendering (beautiful spatial dynamics!)
+    function renderCellOrbs(gContext, cell, m, owner) {
+      cell.pulsePhase += 0.035; // speed of orbit rotating around cell center
+      const coreR = Math.min(m.w, m.h) * 0.15; // Orb circle sizing radius
+      
+      gContext.save();
+      // Setup master colors & subtle soft glowing drop-shadows
+      gContext.shadowBlur = 15;
+      gContext.shadowColor = owner.color;
+      gContext.fillStyle = owner.color;
+
+      const numOrbs = cell.orbs;
+      
+      if (numOrbs === 1) {
+        // Centered pulsating orb
+        const pulse = 1 + Math.sin(cell.pulsePhase * 2) * 0.12;
+        gContext.beginPath();
+        gContext.arc(m.cx, m.cy, coreR * pulse, 0, Math.PI * 2);
+        gContext.fill();
+        
+        // Inner highlights
+        gContext.shadowBlur = 0;
+        gContext.fillStyle = "rgba(255, 255, 255, 0.45)";
+        gContext.beginPath();
+        gContext.arc(m.cx - coreR * 0.25, m.cy - coreR * 0.25, coreR * 0.35, 0, Math.PI * 2);
+        gContext.fill();
+      } 
+      
+      else if (numOrbs === 2) {
+        // Dual orbital particles orbiting cellular core
+        const orbitRadius = Math.min(m.w, m.h) * 0.22;
+        const angle1 = cell.pulsePhase;
+        const angle2 = cell.pulsePhase + Math.PI;
+
+        const p1x = m.cx + Math.cos(angle1) * orbitRadius;
+        const p1y = m.cy + Math.sin(angle1) * orbitRadius;
+        const p2x = m.cx + Math.cos(angle2) * orbitRadius;
+        const p2y = m.cy + Math.sin(angle2) * orbitRadius;
+
+        // Draw First
+        gContext.beginPath();
+        gContext.arc(p1x, p1y, coreR * 0.9, 0, Math.PI * 2);
+        gContext.fill();
+        // Inner highlights
+        gContext.fillStyle = "rgba(255, 255, 255, 0.45)";
+        gContext.beginPath();
+        gContext.arc(p1x - 1.5, p1y - 1.5, coreR * 0.28, 0, Math.PI * 2);
+        gContext.fill();
+
+        // Draw Second
+        gContext.fillStyle = owner.color;
+        gContext.shadowBlur = 15;
+        gContext.beginPath();
+        gContext.arc(p2x, p2y, coreR * 0.9, 0, Math.PI * 2);
+        gContext.fill();
+        // Inner highlights
+        gContext.fillStyle = "rgba(255, 255, 255, 0.45)";
+        gContext.beginPath();
+        gContext.arc(p2x - 1.5, p2y - 1.5, coreR * 0.28, 0, Math.PI * 2);
+        gContext.fill();
+      } 
+      
+      else if (numOrbs === 3) {
+        // Triangular system of orbs
+        const orbitRadius = Math.min(m.w, m.h) * 0.25;
+        for (let i = 0; i < 3; i++) {
+          const angle = cell.pulsePhase + (i * Math.PI * 2) / 3;
+          const px = m.cx + Math.cos(angle) * orbitRadius;
+          const py = m.cy + Math.sin(angle) * orbitRadius;
+
+          gContext.fillStyle = owner.color;
+          gContext.shadowBlur = 15;
+          gContext.beginPath();
+          gContext.arc(px, py, coreR * 0.82, 0, Math.PI * 2);
+          gContext.fill();
+
+          gContext.fillStyle = "rgba(255, 255, 255, 0.45)";
+          gContext.beginPath();
+          gContext.arc(px - 1.5, py - 1.5, coreR * 0.25, 0, Math.PI * 2);
+          gContext.fill();
+        }
+      } 
+      
+      else {
+        // Quad or packed array configurations
+        const orbitRadius = Math.min(m.w, m.h) * 0.26;
+        for (let i = 0; i < numOrbs; i++) {
+          const angle = cell.pulsePhase + (i * Math.PI * 2) / numOrbs;
+          const px = m.cx + Math.cos(angle) * orbitRadius;
+          const py = m.cy + Math.sin(angle) * orbitRadius;
+
+          gContext.fillStyle = owner.color;
+          gContext.shadowBlur = 15;
+          gContext.beginPath();
+          gContext.arc(px, py, coreR * 0.75, 0, Math.PI * 2);
+          gContext.fill();
+
+          gContext.fillStyle = "rgba(255, 255, 255, 0.45)";
+          gContext.beginPath();
+          gContext.arc(px - 1.2, py - 1.2, coreR * 0.22, 0, Math.PI * 2);
+          gContext.fill();
+        }
+      }
+      
+      gContext.restore();
+    }
+  </script>
+</body>
+</html>
